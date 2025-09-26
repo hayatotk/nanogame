@@ -29,8 +29,9 @@ void handle_input(Player& player, const Uint8* keys) {
     if (keys[key_left])  target_vx -= move_speed;
     if (keys[key_right]) target_vx += move_speed;
 
-    if (target_vx != 0) player.vx += (target_vx - player.vx) * 0.3f;
-    else {
+    if (target_vx != 0) {
+        player.vx += (target_vx - player.vx) * 0.3f;
+    } else {
         player.vx *= 0.8f;
         if (fabs(player.vx) < 0.1f) player.vx = 0;
     }
@@ -99,14 +100,15 @@ void update_physics(Player& player) {
     }
 
     if (player.x < 0) player.x = 0;
-    if (player.y > 799) {
+
+    if (player.y > window_height + 200) {
         player = init_player(100, 100);
     }
 }
 
 void render_player(const Player& player, SDL_Renderer* renderer, bool show_hitboxes) {
     SDL_Rect rect = {
-        (int)player.x % 800,
+        (int)player.x,
         (int)player.y + (player.crouch ? 16 : 0),
         32,
         32 - (player.crouch ? 16 : 0)
