@@ -1,17 +1,18 @@
 #pragma once
-#include <SDL2/SDL.h>
+#include "InputState.hpp"
 
 struct Player {
     float x, y;
     float vx, vy;
+    int prev_jump;
+    int jumps;
     int crouch;
     int run;
-    int jumps;
-    int prev_jump;
     int on_ground;
 };
 
 Player init_player(float start_x, float start_y);
-void handle_input(Player& player, const Uint8* keys);
+
+void handle_input(Player& player, const InputState& input);
+
 void update_physics(Player& player);
-void render_player(const Player& player, SDL_Renderer* renderer, bool show_hitboxes);

@@ -3,13 +3,13 @@
 #include <cstring>
 #include <cstdlib>
 
-int key_left   = SDL_SCANCODE_LEFT;
-int key_right  = SDL_SCANCODE_RIGHT;
-int key_jump   = SDL_SCANCODE_SPACE;
-int key_down   = SDL_SCANCODE_DOWN;
-int key_run    = SDL_SCANCODE_LSHIFT;
-int key_reset  = SDL_SCANCODE_R;
-int key_fullscreen = SDL_SCANCODE_F11;
+std::string key_left_name       = "LEFT";
+std::string key_right_name      = "RIGHT";
+std::string key_jump_name       = "SPACE";
+std::string key_down_name       = "DOWN";
+std::string key_run_name        = "LSHIFT";
+std::string key_reset_name      = "R";
+std::string key_fullscreen_name = "F11";
 
 bool show_hitboxes = true;
 bool show_debug    = true;
@@ -51,22 +51,20 @@ void load_config(const char* path) {
         trim_line(line);
         trim_line(sep);
 
-        int code = SDL_GetScancodeFromName(sep);
-
-        if (strcmp(line, "left") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_left = code;
-        } else if (strcmp(line, "right") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_right = code;
-        } else if (strcmp(line, "jump") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_jump = code;
-        } else if (strcmp(line, "down") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_down = code;
-        } else if (strcmp(line, "run") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_run = code;
-        } else if (strcmp(line, "reset") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_reset = code;
-        } else if (strcmp(line, "fullscreen_toggle") == 0 && code != SDL_SCANCODE_UNKNOWN) {
-            key_fullscreen = code;
+        if (strcmp(line, "left") == 0) {
+            key_left_name = sep;
+        } else if (strcmp(line, "right") == 0) {
+            key_right_name = sep;
+        } else if (strcmp(line, "jump") == 0) {
+            key_jump_name = sep;
+        } else if (strcmp(line, "down") == 0) {
+            key_down_name = sep;
+        } else if (strcmp(line, "run") == 0) {
+            key_run_name = sep;
+        } else if (strcmp(line, "reset") == 0) {
+            key_reset_name = sep;
+        } else if (strcmp(line, "fullscreen_toggle") == 0) {
+            key_fullscreen_name = sep;
         } else if (strcmp(line, "show_hitboxes") == 0) {
             show_hitboxes = (strcmp(sep, "0") != 0);
         } else if (strcmp(line, "show_debug") == 0) {

@@ -1,6 +1,7 @@
 #include "Player.hpp"
-#include "Config.hpp"
 #include "Level.hpp"
+#include "Config.hpp"
+#include "InputState.hpp"
 #include <cmath>
 #include <initializer_list>
 
@@ -8,16 +9,18 @@ Player init_player(float start_x, float start_y) {
     return {start_x, start_y, 0, 0, 0, 0, 2, 0, 1};
 }
 
-void handle_input(Player& player, const Uint8* keys) {
-    player.crouch = keys[key_down];
-    player.run    = keys[key_run];
+void handle_input(Player& player, const InputState& input) {
+    player.crouch = input.crouch;
+    player.run    = input.run;
 
-    if (keys[key_jump] && !player.prev_jump && player.jumps > 0) {
+    if (input.jump && !player.prev_jump && player.jumps > 0) {
         player.vy = -12;
         player.jumps--;
         player.prev_jump = 1;
     }
-    if (!keys[key_jump]) player.prev_jump = 0;
+    if (!input.jump) {
+        player.prev_jump = 0;
+    }
 
     float base_speed = 4.0f;
     float move_speed = base_speed;
@@ -26,8 +29,8 @@ void handle_input(Player& player, const Uint8* keys) {
     if (!player.on_ground) move_speed *= 1.5f;
 
     float target_vx = 0;
-    if (keys[key_left])  target_vx -= move_speed;
-    if (keys[key_right]) target_vx += move_speed;
+    if (input.left)  target_vx -= move_speed;
+    if (input.right) target_vx += move_speed;
 
     if (target_vx != 0) {
         player.vx += (target_vx - player.vx) * 0.3f;
@@ -68,7 +71,7 @@ void update_physics(Player& player) {
     int tx1 = ((int)player.x) / 32;
     int tx2 = ((int)player.x + 31) / 32;
     int foot_y = (int)(player.y + 31) / 32;
-    int head_y = (int)(player.y + 4) / 32;
+    int head_y = (int)player.y + 4 / 32;
 
     bool foot_block = false, head_block = false;
 
@@ -103,22 +106,5 @@ void update_physics(Player& player) {
 
     if (player.y > window_height + 200) {
         player = init_player(100, 100);
-    }
-}
-
-void render_player(const Player& player, SDL_Renderer* renderer, bool show_hitboxes) {
-    SDL_Rect rect = {
-        (int)player.x,
-        (int)player.y + (player.crouch ? 16 : 0),
-        32,
-        32 - (player.crouch ? 16 : 0)
-    };
-
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(renderer, &rect);
-
-    if (show_hitboxes) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-        SDL_RenderDrawRect(renderer, &rect);
     }
 }

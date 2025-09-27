@@ -1,22 +1,23 @@
 #pragma once
-#include <SDL2/SDL.h>
+#include <string>
 
-extern int key_left;
-extern int key_right;
-extern int key_jump;
-extern int key_down;
-extern int key_run;
-extern int key_reset;
-extern int key_fullscreen;
-extern int window_width;
-extern int window_height;
-extern int config_window_width;
-extern int config_window_height;
-
+extern std::string key_left_name;
+extern std::string key_right_name;
+extern std::string key_jump_name;
+extern std::string key_down_name;
+extern std::string key_run_name;
+extern std::string key_reset_name;
+extern std::string key_fullscreen_name;
 
 extern bool show_hitboxes;
 extern bool show_debug;
 extern bool show_splash;
+
+extern int config_window_width;
+extern int config_window_height;
+
+extern int window_width;
+extern int window_height;
 extern bool fullscreen;
 
 void load_config(const char* path);

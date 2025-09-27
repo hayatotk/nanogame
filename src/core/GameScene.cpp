@@ -1,15 +1,7 @@
 #include "GameScene.hpp"
-#include "Config.hpp"
 #include "Level.hpp"
-#include "Render.hpp"
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include "Config.hpp"
 #include <cstdio>
-#include <vector>
-
-extern SDL_Renderer* g_renderer;
-extern TTF_Font* g_font;
 
 extern int level[15][64];
 extern int current_level;
@@ -18,12 +10,11 @@ struct Camera {
     float x, y;
     int w, h;
 };
-
 static Camera camera;
 
-static void render_background(const Player& player) {
+static void render_background(IRenderer& gfx, const Camera& camera, int window_width, int window_height) {
     int tile_size = 32;
-    int level_px_w = 64 * tile_size;
+    int level_px_w = 128 * tile_size;
     int bg_width = (int)(level_px_w * 1.4f);
     int bg_height = window_height;
 
@@ -37,13 +28,10 @@ static void render_background(const Player& player) {
             int screen_y = y * tile_size;
 
             if ((x + y) % 2 == 0) {
-                SDL_SetRenderDrawColor(g_renderer, 20, 20, 20, 255);
+                gfx.drawRect(screen_x, screen_y, tile_size, tile_size, 20, 20, 20);
             } else {
-                SDL_SetRenderDrawColor(g_renderer, 30, 30, 30, 255);
+                gfx.drawRect(screen_x, screen_y, tile_size, tile_size, 30, 30, 30);
             }
-
-            SDL_Rect rect = {screen_x, screen_y, tile_size, tile_size};
-            SDL_RenderFillRect(g_renderer, &rect);
         }
     }
 }
@@ -67,7 +55,7 @@ static bool check_exit_trigger(const Player& player) {
 }
 
 GameScene::GameScene() {
-    player = init_player(100, 100);
+    player = init_player(100, 200);
     load_level(0);
     reached_exit = false;
 
@@ -77,10 +65,8 @@ GameScene::GameScene() {
     camera.h = window_height;
 }
 
-void GameScene::update() {
-    SDL_PumpEvents();
-    const Uint8* keys = SDL_GetKeyboardState(nullptr);
-    handle_input(player, keys);
+void GameScene::update(const InputState& input) {
+    handle_input(player, input);
     update_physics(player);
 
     camera.w = window_width;
@@ -108,9 +94,9 @@ void GameScene::update() {
             camera.y = level_px_h - camera.h;
     }
 
-    if (keys[key_reset]) {
+    if (input.reset) {
         load_level(current_level);
-        player = init_player(100, 100);
+        player = init_player(100, 300);
         reached_exit = false;
         return;
     }
@@ -119,11 +105,11 @@ void GameScene::update() {
         int next_level = current_level + 1;
         if (load_level(next_level)) {
             current_level = next_level;
-            player = init_player(100, 100);
+            player = init_player(100, 300);
         } else {
             load_level(0);
             current_level = 0;
-            player = init_player(100, 100);
+            player = init_player(100, 300);
         }
         reached_exit = false;
         return;
@@ -131,71 +117,62 @@ void GameScene::update() {
 
     if (player.y > window_height + 200) {
         if (load_level(current_level)) {
-            player = init_player(100, 100);
+            player = init_player(100, 300);
         } else {
             load_level(0);
             current_level = 0;
-            player = init_player(100, 100);
+            player = init_player(100, 300);
         }
         reached_exit = false;
     }
 }
 
-void GameScene::render() {
-    render_background(player);
+void GameScene::render(IRenderer& gfx) {
+    render_background(gfx, camera, window_width, window_height);
 
     for (int ty = camera.y / 32; ty <= (camera.y + camera.h) / 32; ty++) {
         for (int tx = camera.x / 32; tx <= (camera.x + camera.w) / 32; tx++) {
             if (tx >= 0 && tx < 64 && ty >= 0 && ty < 15) {
-                SDL_Rect block = {
-                    tx * 32 - (int)camera.x,
-                    ty * 32 - (int)camera.y,
-                    32, 32
-                };
-
                 if (level[ty][tx] == 1) {
-                    SDL_SetRenderDrawColor(g_renderer, 64, 64, 64, 255);
-                    SDL_RenderFillRect(g_renderer, &block);
-
+                    gfx.drawRect(tx * 32 - (int)camera.x,
+                                 ty * 32 - (int)camera.y,
+                                 32, 32, 64, 64, 64);
                     if (show_hitboxes) {
-                        SDL_SetRenderDrawColor(g_renderer, 0, 255, 0, 255);
-                        SDL_RenderDrawRect(g_renderer, &block);
+                        gfx.drawRectOutline(tx * 32 - (int)camera.x,
+                                            ty * 32 - (int)camera.y,
+                                            32, 32, 0, 255, 0);
                     }
                 } else if (level[ty][tx] == 2) {
                     if (show_hitboxes) {
-                        SDL_SetRenderDrawColor(g_renderer, 255, 255, 0, 255);
-                        SDL_RenderDrawRect(g_renderer, &block);
+                        gfx.drawRectOutline(tx * 32 - (int)camera.x,
+                                            ty * 32 - (int)camera.y,
+                                            32, 32, 255, 255, 0);
                     }
                 }
             }
         }
     }
 
-    SDL_Rect rect = {
-        (int)player.x - (int)camera.x,
-        (int)player.y - (int)camera.y + (player.crouch ? 16 : 0),
-        32,
-        32 - (player.crouch ? 16 : 0)
-    };
-
-    SDL_SetRenderDrawColor(g_renderer, 255, 255, 255, 255);
-    SDL_RenderFillRect(g_renderer, &rect);
+    gfx.drawRect((int)player.x - (int)camera.x,
+                 (int)player.y - (int)camera.y + (player.crouch ? 16 : 0),
+                 32, 32 - (player.crouch ? 16 : 0),
+                 255, 255, 255);
 
     if (show_hitboxes) {
-        SDL_SetRenderDrawColor(g_renderer, 0, 0, 255, 255);
-        SDL_RenderDrawRect(g_renderer, &rect);
+        gfx.drawRectOutline((int)player.x - (int)camera.x,
+                            (int)player.y - (int)camera.y + (player.crouch ? 16 : 0),
+                            32, 32 - (player.crouch ? 16 : 0),
+                            0, 0, 255);
     }
 
     if (show_debug) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "x: %.0f y: %.0f vx: %.2f vy: %.2f", 
+        snprintf(buf, sizeof(buf), "x: %.0f y: %.0f vx: %.2f vy: %.2f",
                  player.x, player.y, player.vx, player.vy);
-        draw_text(g_renderer, g_font, 10, 10, buf);
+        gfx.drawText(10, 10, buf, 255, 0, 0);
 
-        snprintf(buf, sizeof(buf), "camera: %.0f, %.0f (%dx%d)", 
+        snprintf(buf, sizeof(buf), "camera: %.0f, %.0f (%dx%d)",
                  camera.x, camera.y, camera.w, camera.h);
-        draw_text(g_renderer, g_font, 10, 30, buf);
+        gfx.drawText(10, 30, buf, 255, 0, 0);
     }
-
-    SDL_RenderPresent(g_renderer);
 }

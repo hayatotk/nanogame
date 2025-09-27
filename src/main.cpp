@@ -1,50 +1,88 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include "Config.hpp"
-#include "Splash.hpp"
 #include "GameScene.hpp"
+#include "Scene.hpp"
+#include "core/InputState.hpp"
 
-SDL_Renderer* g_renderer = nullptr;
-TTF_Font* g_font = nullptr;
+#ifdef USE_SDL
+    #include <SDL2/SDL.h>
+    #include <SDL2/SDL_ttf.h>
+    #include "platform/SDL_uni/Input.hpp"
+    #include "platform/SDL_uni/Renderer.hpp"
+    #include "platform/SDL_uni/PlayerRender.hpp"
+    #include "platform/SDL_uni/SplashRender.hpp"
+
+    SDL_Renderer* g_renderer = nullptr;
+    TTF_Font* g_font = nullptr;
+#endif
 
 int main() {
-    SDL_Init(SDL_INIT_VIDEO);
-    TTF_Init();
     load_config("config.ini");
 
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
-
-    Uint32 window_flags = 0;
-
-    if (fullscreen) {
-        window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#ifdef USE_SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        SDL_Log("SDL_Init failed: %s", SDL_GetError());
+        return 1;
     }
+    if (TTF_Init() < 0) {
+        SDL_Log("TTF_Init failed: %s", TTF_GetError());
+        return 1;
+    }
+
+    Uint32 window_flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
+
+
+    if (show_splash) {
+        Splash splash;
+
+        while (splash.update()) {
+            render_splash_sdl(g_renderer, splash);
+            SDL_Delay(16); // ~60 FPS
+        }
+    }
+
 
     SDL_Window* window = SDL_CreateWindow("p",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         window_width, window_height, window_flags);
 
+    if (!window) {
+        SDL_Log("SDL_CreateWindow failed: %s", SDL_GetError());
+        return 1;
+    }
+
     g_renderer = SDL_CreateRenderer(window, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
+    if (!g_renderer) {
+        SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
+        return 1;
+    }
 
     SDL_GetWindowSize(window, &window_width, &window_height);
 
     g_font = TTF_OpenFont("test.ttf", 24);
-
-    if (show_splash) {
-        run_splash(g_renderer, g_font);
+    if (!g_font) {
+        SDL_Log("Failed to load font: %s", TTF_GetError());
+        show_debug = false;
     }
 
-    Scene* current_scene = new GameScene();
+    SDLRenderer gfx(g_renderer, g_font);
+#endif
 
+    Scene* current_scene = new GameScene();
     bool quit = false;
+
+#ifdef USE_SDL
     SDL_Event event;
+#endif
+
     while (!quit) {
+#ifdef USE_SDL
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 quit = true;
             } else if (event.type == SDL_KEYDOWN) {
-                if (event.key.keysym.scancode == key_fullscreen) {
+                if (event.key.keysym.scancode == get_fullscreen_scancode()) {
                     Uint32 flags = SDL_GetWindowFlags(window);
                     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
                         SDL_SetWindowFullscreen(window, 0);
@@ -54,8 +92,6 @@ int main() {
                         SDL_GetWindowSize(window, &w, &h);
                         window_width = w;
                         window_height = h;
-
-                        printf("Fullscreen OFF (%dx%d)\n", window_width, window_height);
                     } else {
                         SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
@@ -63,31 +99,37 @@ int main() {
                         SDL_GetWindowSize(window, &w, &h);
                         window_width = w;
                         window_height = h;
-
-                        printf("Fullscreen ON (%dx%d)\n", window_width, window_height);
                     }
                 }
             } else if (event.type == SDL_WINDOWEVENT &&
                        event.window.event == SDL_WINDOWEVENT_RESIZED) {
                 SDL_GetWindowSize(window, &window_width, &window_height);
-                printf("Window resized to %dx%d\n", window_width, window_height);
             }
         }
 
-        current_scene->update();
-        current_scene->render();
+        SDL_PumpEvents();
+        InputState input = get_input_from_sdl();
+
+        current_scene->update(input);
+        gfx.clear(0, 0, 0);
+        current_scene->render(gfx);
+        gfx.present();
+#endif
+
+#ifdef USE_PSP
+        // TODO: wii or psp or whatever --- IGNORE ---
+#endif
     }
 
     delete current_scene;
 
-    if (g_font) {
-        TTF_CloseFont(g_font);
-    }
+#ifdef USE_SDL
+    if (g_font) TTF_CloseFont(g_font);
     SDL_DestroyRenderer(g_renderer);
     SDL_DestroyWindow(window);
-
     TTF_Quit();
     SDL_Quit();
+#endif
 
     return 0;
 }
