@@ -1,0 +1,6 @@
+#pragma once
+#define GAMU_NAME "@GAMU_NAME@"
+#define GAMU_VERSION "@GAMU_VERSION@"
+#define GAMU_COMMIT "@GIT_COMMIT@"
+#define GAMU_STATUS "@BUILD_STATUS@"
+#define GAMU_PLATFORM "@PLATFORM_NAME@"
