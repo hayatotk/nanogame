@@ -8,7 +8,7 @@ class GameScene : public Scene {
 public:
     GameScene();
 
-    void update(const InputState& input) override;
+    void update(const InputState& input, double dt) override;
     void render(IRenderer& gfx) override;
 
 private:

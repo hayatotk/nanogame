@@ -21,6 +21,7 @@ int config_window_height = 600;
 int window_width   = 800;
 int window_height  = 600;
 bool fullscreen    = false;
+bool vsync         = false;
 
 static void trim_line(char* str) {
     char* newline = strchr(str, '\n');
@@ -80,6 +81,10 @@ void load_config(const char* path) {
         } else if (strcmp(line, "fullscreen") == 0) {
             fullscreen = (strcmp(sep, "0") != 0);
         }
+        else if (strcmp(line, "vsync") == 0) {
+            vsync = (strcmp(sep, "0") != 0);
+        }
+
     }
 
     fclose(file);

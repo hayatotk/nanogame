@@ -50,8 +50,10 @@ int main() {
         return 1;
     }
 
-    g_renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    Uint32 render_flags = SDL_RENDERER_ACCELERATED;
+    if (vsync) render_flags |= SDL_RENDERER_PRESENTVSYNC;
+
+        g_renderer = SDL_CreateRenderer(window, -1, render_flags);
 
     if (!g_renderer) {
         SDL_Log("SDL_CreateRenderer failed: %s", SDL_GetError());
@@ -76,8 +78,17 @@ int main() {
     SDL_Event event;
 #endif
 
+#ifdef USE_SDL
+    Uint64 prev = SDL_GetPerformanceCounter();
+    const double freq = (double)SDL_GetPerformanceFrequency();
+#endif
+
     while (!quit) {
 #ifdef USE_SDL
+        Uint64 now = SDL_GetPerformanceCounter();
+        double deltaTime = (double)(now - prev) / freq;
+        prev = now;
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 quit = true;
@@ -110,7 +121,7 @@ int main() {
         SDL_PumpEvents();
         InputState input = get_input_from_sdl();
 
-        current_scene->update(input);
+        current_scene->update(input, deltaTime);
         gfx.clear(0, 0, 0);
         current_scene->render(gfx);
         gfx.present();

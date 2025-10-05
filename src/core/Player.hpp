@@ -13,6 +13,6 @@ struct Player {
 
 Player init_player(float start_x, float start_y);
 
-void handle_input(Player& player, const InputState& input);
+void handle_input(Player& player, const InputState& input, float dt);
 
 void update_physics(Player& player);

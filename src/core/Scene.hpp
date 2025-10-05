@@ -6,6 +6,6 @@ class Scene {
 public:
     virtual ~Scene() = default;
 
-    virtual void update(const InputState& input) = 0;
+    virtual void update(const InputState& input, double dt) = 0;
     virtual void render(IRenderer& gfx) = 0;
 };

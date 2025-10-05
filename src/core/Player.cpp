@@ -9,36 +9,40 @@ Player init_player(float start_x, float start_y) {
     return {start_x, start_y, 0, 0, 0, 0, 2, 0, 1};
 }
 
-void handle_input(Player& player, const InputState& input) {
+void handle_input(Player& player, const InputState& input, float dt) {
     player.crouch = input.crouch;
     player.run    = input.run;
 
     if (input.jump && !player.prev_jump && player.jumps > 0) {
-        player.vy = -12;
+        player.vy = -12.0f;
         player.jumps--;
         player.prev_jump = 1;
     }
-    if (!input.jump) {
+    if (!input.jump)
         player.prev_jump = 0;
-    }
 
     float base_speed = 4.0f;
     float move_speed = base_speed;
-    if (player.run) move_speed *= 1.5f;
+    if (player.run)    move_speed *= 1.5f;
     if (player.crouch) move_speed *= 0.5f;
     if (!player.on_ground) move_speed *= 1.5f;
 
-    float target_vx = 0;
+    float target_vx = 0.0f;
     if (input.left)  target_vx -= move_speed;
     if (input.right) target_vx += move_speed;
 
-    if (target_vx != 0) {
-        player.vx += (target_vx - player.vx) * 0.3f;
+    const float accel_factor = 10.0f;
+    if (target_vx != 0.0f) {
+        player.vx += (target_vx - player.vx) * accel_factor * dt;
     } else {
-        player.vx *= 0.8f;
-        if (fabs(player.vx) < 0.1f) player.vx = 0;
+        player.vx *= powf(0.8f, 60.0f * dt);
+        if (fabsf(player.vx) < 0.1f) player.vx = 0.0f;
     }
+
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
 }
+
 
 void update_physics(Player& player) {
     player.vy += 1;

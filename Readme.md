@@ -1,13 +1,16 @@
 <div align="center">
 
-<!--here should be a logo, lol, but i have no ppl to draw it-->
 
 # nanogame
 
-</div>
-Yet-another-platformer-game-engine. But this one has no .NET, Lua, or weird behaviour (WIP) 
 
-<div align="center">
+
+![image](.ghres/banner.png)
+
+
+
+## Yet-another-platformer-game-engine. But this one has no .NET, Lua, or weird behaviour (WIP)  
+
 
 ![Build](https://img.shields.io/badge/Build-passing_locally-blue?style=for-the-badge)
 ![version](https://img.shields.io/badge/Version-0.1-wakarimasen?style=for-the-badge)

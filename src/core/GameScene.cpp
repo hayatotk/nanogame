@@ -65,8 +65,8 @@ GameScene::GameScene() {
     camera.h = window_height;
 }
 
-void GameScene::update(const InputState& input) {
-    handle_input(player, input);
+void GameScene::update(const InputState& input, double dt) {
+    handle_input(player, input, (float)dt);
     update_physics(player);
 
     camera.w = window_width;

@@ -19,5 +19,6 @@ extern int config_window_height;
 extern int window_width;
 extern int window_height;
 extern bool fullscreen;
+extern bool vsync;
 
 void load_config(const char* path);
